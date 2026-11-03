@@ -19,8 +19,8 @@ public class JuegoEightOff{
         fundaciones=new ListaSimple<>();
         historial=new ListaSimple<>();
 
-        for(Palo p:Palo.values()){
-            fundaciones.insertaFin(new Fundacion(p));
+        for(int i=0;i<4;i++){
+            fundaciones.insertaFin(new Fundacion());
         }
         for(int i=0;i<8;i++){
             reservas.insertaFin(new Reserva());
@@ -132,41 +132,48 @@ public class JuegoEightOff{
 
     //Busca y regresa una jugada posible (pista)
     public Movimiento obtenerPista(){
-        //Revisa tableaus hacia fundaciones
+        //1. Prioridad: mover a fundaciones (desde tableaus)
         for(int i=0;i<8;i++){
             CartaInglesa carta=tableros.obtenerPorPosicion(i).verCarta();
             if(carta!=null){
                 for(int j=0;j<4;j++){
                     Fundacion f=fundaciones.obtenerPorPosicion(j);
-                    CartaInglesa tope=f.getUltimaCarta();
-                    if((tope==null&&carta.getValor()==14)||
-                            (tope!=null&&tope.getPalo()==carta.getPalo()&&
-                                    (tope.getValor()+1==carta.getValor()||(tope.getValor()==14&&carta.getValor()==2)))){
+                    if(puedeIrAFundacion(carta,f)){
                         return new Movimiento("TABLEAU",i,"FUNDACION",j,1);
                     }
                 }
-                //Revisa tableaus hacia otros tableaus
+            }
+        }
+
+        //2. Mover a fundaciones desde reservas
+        for(int i=0;i<8;i++){
+            CartaInglesa carta=reservas.obtenerPorPosicion(i).getCarta();
+            if(carta!=null){
+                for(int j=0;j<4;j++){
+                    Fundacion f=fundaciones.obtenerPorPosicion(j);
+                    if(puedeIrAFundacion(carta,f)){
+                        return new Movimiento("LIBRE",i,"FUNDACION",j,1);
+                    }
+                }
+            }
+        }
+
+        //3. Mover entre tableaus
+        for(int i=0;i<8;i++){
+            CartaInglesa carta=tableros.obtenerPorPosicion(i).verCarta();
+            if(carta!=null){
                 for(int j=0;j<8;j++){
-                    if(i!=j&&tableros.obtenerPorPosicion(j).sePuedeAgregarCarta(carta)){
+                    if(i!=j && tableros.obtenerPorPosicion(j).sePuedeAgregarCarta(carta)){
                         return new Movimiento("TABLEAU",i,"TABLEAU",j,1);
                     }
                 }
             }
         }
 
-        //Revisa reservas
+        //4. Mover de reserva a tableau
         for(int i=0;i<8;i++){
             CartaInglesa carta=reservas.obtenerPorPosicion(i).getCarta();
             if(carta!=null){
-                for(int j=0;j<4;j++){
-                    Fundacion f=fundaciones.obtenerPorPosicion(j);
-                    CartaInglesa tope=f.getUltimaCarta();
-                    if((tope==null&&carta.getValor()==14)||
-                            (tope!=null&&tope.getPalo()==carta.getPalo()&&
-                                    (tope.getValor()+1==carta.getValor()||(tope.getValor()==14&&carta.getValor()==2)))){
-                        return new Movimiento("LIBRE",i,"FUNDACION",j,1);
-                    }
-                }
                 for(int j=0;j<8;j++){
                     if(tableros.obtenerPorPosicion(j).sePuedeAgregarCarta(carta)){
                         return new Movimiento("LIBRE",i,"TABLEAU",j,1);
@@ -175,7 +182,7 @@ public class JuegoEightOff{
             }
         }
 
-        //Mover de tableau a reserva vacía
+        //5. Mover de tableau a una reserva vacía
         for(int i=0;i<8;i++){
             if(reservas.obtenerPorPosicion(i).estaVacia()){
                 for(int j=0;j<8;j++){
@@ -186,7 +193,27 @@ public class JuegoEightOff{
                 }
             }
         }
-        return null;
+
+        return null; //No hay movimientos posibles
+    }
+
+    //Método auxiliar para validar si una carta puede ir a una fundación
+    private boolean puedeIrAFundacion(CartaInglesa carta,Fundacion f){
+        CartaInglesa tope=f.getUltimaCarta();
+
+        //Si está vacía, solo acepta As
+        if(tope==null){
+            return carta.getValor()==14;
+        }
+
+        //Debe ser del mismo palo
+        if(carta.getPalo()!=tope.getPalo()) return false;
+
+        //Después del As viene el 2
+        if(tope.getValor()==14 && carta.getValor()==2) return true;
+
+        //Caso normal
+        return tope.getValor()+1==carta.getValor();
     }
 
     //Verifica si el jugador ya ganó

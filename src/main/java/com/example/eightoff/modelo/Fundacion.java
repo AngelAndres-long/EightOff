@@ -3,51 +3,59 @@ package com.example.eightoff.modelo;
 /**
  * Representa un montículo de un solo palo.
  * Se construye desde el As hasta el Rey.
+ * Al inicio puede recibir cualquier As.
  */
 public class Fundacion{
 
     private ListaSimple<CartaInglesa> cartas;
-    private Palo palo;
+    private Palo palo; //se define cuando llega el primer As
 
-    public Fundacion(Palo palo){
-        this.palo=palo;
+    public Fundacion(){
         this.cartas=new ListaSimple<>();
+        this.palo=null;
     }
 
-    //Intenta agregar una carta. Solo se agrega si es la siguiente del mismo palo
+    //Intenta agregar una carta
     public boolean agregarCarta(CartaInglesa carta){
-        if(carta.getPalo()!=palo) return false;
-
+        //Si está vacía, solo acepta As
         if(cartas.isEmpty()){
-            if(carta.getValor()==14){ //As
+            if(carta.getValor()==14){
                 cartas.insertaFin(carta);
+                this.palo=carta.getPalo(); //se fija el palo
                 return true;
             }
             return false;
         }
 
+        //Ya tiene cartas, debe ser del mismo palo y el siguiente valor
+        if(carta.getPalo()!=palo) return false;
+
         CartaInglesa ultima=cartas.getLast();
-        if(ultima.getValor()+1==carta.getValor()||(ultima.getValor()==14&&carta.getValor()==2)){
-            //Ajuste por si el As se maneja como 14
-            if(ultima.getValor()==14&&carta.getValor()==2){
-                cartas.insertaFin(carta);
-                return true;
-            }
-            if(ultima.getValor()+1==carta.getValor()){
-                cartas.insertaFin(carta);
-                return true;
-            }
+
+        //Después del As (14) viene el 2
+        if(ultima.getValor()==14 && carta.getValor()==2){
+            cartas.insertaFin(carta);
+            return true;
         }
+
+        //Caso normal
+        if(ultima.getValor()+1==carta.getValor()){
+            cartas.insertaFin(carta);
+            return true;
+        }
+
         return false;
     }
 
-    //Elimina y regresa la última carta
     public CartaInglesa removerUltimaCarta(){
         if(cartas.isEmpty()) return null;
-        return cartas.eliminaFin();
+        CartaInglesa c=cartas.eliminaFin();
+        if(cartas.isEmpty()){
+            palo=null; //se libera el palo si queda vacía
+        }
+        return c;
     }
 
-    //Regresa la última carta sin eliminarla
     public CartaInglesa getUltimaCarta(){
         if(cartas.isEmpty()) return null;
         return cartas.getLast();
