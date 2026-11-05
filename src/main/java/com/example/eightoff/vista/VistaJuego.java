@@ -38,7 +38,6 @@ public class VistaJuego extends BorderPane{
         fundaciones=new VBox(10);
         tableaus=new HBox(10);
 
-        //Color de fondo
         this.setStyle("-fx-background-color:#0d3b2e;");
 
         BotonUndo btnDeshacer=new BotonUndo();
@@ -51,9 +50,12 @@ public class VistaJuego extends BorderPane{
         btnPista.setOnAction(e->{
             pistaActual=controlador.obtenerPista();
             dibujarTablero();
+
+            if(pistaActual!=null && pistaActual.getTipoDestino().equalsIgnoreCase("LIBRE")){
+                mostrarMensaje("Pista","Mueve una carta a un espacio libre.");
+            }
         });
 
-        //Botón de nuevo juego
         Button btnNuevo=new Button("NUEVO");
         String estiloBase="-fx-font-size:16px;-fx-padding:10px 20px;-fx-border-color:#2e8b57;-fx-border-radius:5px;-fx-background-radius:5px;-fx-font-weight:bold;";
         btnNuevo.setStyle(estiloBase+"-fx-background-color:#98fb98;");
@@ -61,13 +63,11 @@ public class VistaJuego extends BorderPane{
         btnNuevo.setOnMouseExited(e->btnNuevo.setStyle(estiloBase+"-fx-background-color:#98fb98;"));
         btnNuevo.setOnAction(e->reiniciarJuego());
 
-        //Área superior centrada
         HBox areaSuperior=new HBox(30);
         areaSuperior.setAlignment(Pos.CENTER);
         areaSuperior.setPadding(new Insets(20));
         areaSuperior.getChildren().addAll(celdasLibres,btnPista,btnDeshacer,btnNuevo);
 
-        //Contenedor central que junta fundaciones + tableaus
         HBox centro=new HBox(30);
         centro.setAlignment(Pos.CENTER);
         centro.setPadding(new Insets(10,20,20,20));
@@ -79,7 +79,6 @@ public class VistaJuego extends BorderPane{
         dibujarTablero();
     }
 
-    //Reinicia el juego creando un nuevo ControladorJuego
     private void reiniciarJuego(){
         this.controlador=new ControladorJuego();
         tipoSeleccionado=null;
@@ -134,7 +133,6 @@ public class VistaJuego extends BorderPane{
             tableaus.getChildren().add(columna);
         }
 
-        //Fundaciones
         fundaciones.getChildren().clear();
         for(int i=0;i<4;i++){
             Fundacion f=controlador.getFundaciones().obtenerPorPosicion(i);
@@ -155,7 +153,6 @@ public class VistaJuego extends BorderPane{
             }
         }
 
-        //Reservas
         celdasLibres.getChildren().clear();
         for(int i=0;i<8;i++){
             Reserva r=controlador.getReservas().obtenerPorPosicion(i);
@@ -200,7 +197,6 @@ public class VistaJuego extends BorderPane{
             tipoSeleccionado=tipo;
             celdaSeleccionada=num;
             cartaSeleccionada=posCarta;
-            //Selección naranja
             nodo.setStyle("-fx-effect:dropshadow(three-pass-box,#ff8c00,18,0.85,0,0);");
         }else{
             boolean movido=controlador.moverCarta(tipoSeleccionado,celdaSeleccionada,cartaSeleccionada,tipo,num);
@@ -217,16 +213,13 @@ public class VistaJuego extends BorderPane{
     private void aplicarEstiloPista(Node nodo,String tipo,int indice){
         if(pistaActual!=null){
             if(pistaActual.getTipoOrigen().equalsIgnoreCase(tipo)&&pistaActual.getIdOrigen()==indice){
-                //Origen de la pista (rosa)
                 nodo.setStyle("-fx-effect:dropshadow(three-pass-box,#ff69b4,22,0.9,0,0);");
             }else if(pistaActual.getTipoDestino().equalsIgnoreCase(tipo)&&pistaActual.getIdDestino()==indice){
-                //Destino de la pista (azul cielo)
                 nodo.setStyle("-fx-effect:dropshadow(three-pass-box,#00bfff,22,0.9,0,0);");
             }
         }
     }
 
-    //Verifica si el jugador ganó o si ya no hay movimientos
     private void verificarEstadoJuego(){
         if(controlador.estaGanado()){
             mostrarMensaje("¡Ganaste!","Felicidades, completaste el Eight Off.");
@@ -238,7 +231,6 @@ public class VistaJuego extends BorderPane{
         }
     }
 
-    //Muestra una ventana de mensaje
     private void mostrarMensaje(String titulo,String mensaje){
         Alert alert=new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle(titulo);

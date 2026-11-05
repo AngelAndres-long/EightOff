@@ -16,7 +16,7 @@ public class CartaVisual{
 
     private String sacarRutaImagen(CartaInglesa carta){
         if(carta==null){
-            return "/imagenes/cartas/vacio.png"; //opcional, si tienes imagen de vacío
+            return "/imagenes/cartas/vacio.png";
         }
         return "/imagenes/cartas/"+carta.getValor()+carta.getPalo().getNombre()+".png";
     }
