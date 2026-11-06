@@ -63,7 +63,7 @@ public class JuegoEightOff{
             if(c==null) return false;
             bloque.insertaFin(c);
         }else{
-            return false; //no se mueve desde fundaciones
+            return false;
         }
 
         int tamano=bloque.contarElementos();
@@ -182,7 +182,7 @@ public class JuegoEightOff{
             }
         }
 
-        //5. Mover de tableau a una reserva vacía
+        //5. Si no hay jugadas mejores, sugiere mover una carta a una reserva vacía
         for(int i=0;i<8;i++){
             if(reservas.obtenerPorPosicion(i).estaVacia()){
                 for(int j=0;j<8;j++){
@@ -194,29 +194,23 @@ public class JuegoEightOff{
             }
         }
 
-        return null; //No hay movimientos posibles
+        return null;
     }
 
-    //Método auxiliar para validar si una carta puede ir a una fundación
     private boolean puedeIrAFundacion(CartaInglesa carta,Fundacion f){
         CartaInglesa tope=f.getUltimaCarta();
 
-        //Si está vacía, solo acepta As
         if(tope==null){
             return carta.getValor()==14;
         }
 
-        //Debe ser del mismo palo
         if(carta.getPalo()!=tope.getPalo()) return false;
 
-        //Después del As viene el 2
         if(tope.getValor()==14 && carta.getValor()==2) return true;
 
-        //Caso normal
         return tope.getValor()+1==carta.getValor();
     }
 
-    //Verifica si el jugador ya ganó
     public boolean estaGanado(){
         for(int i=0;i<4;i++){
             Fundacion f=fundaciones.obtenerPorPosicion(i);

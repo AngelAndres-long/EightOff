@@ -9,7 +9,6 @@ import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
-import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
@@ -42,17 +41,23 @@ public class VistaJuego extends BorderPane{
 
         BotonUndo btnDeshacer=new BotonUndo();
         btnDeshacer.setOnAction(e->{
-            controlador.deshacerMovimiento();
+            this.controlador.deshacerMovimiento();
             dibujarTablero();
         });
 
         BotonPista btnPista=new BotonPista();
         btnPista.setOnAction(e->{
-            pistaActual=controlador.obtenerPista();
+            tipoSeleccionado=null;
+            celdaSeleccionada=-1;
+            cartaSeleccionada=-1;
+
+            this.pistaActual=this.controlador.obtenerPista();
             dibujarTablero();
 
-            if(pistaActual!=null && pistaActual.getTipoDestino().equalsIgnoreCase("LIBRE")){
+            if(this.pistaActual!=null && this.pistaActual.getTipoDestino().equalsIgnoreCase("LIBRE")){
                 mostrarMensaje("Pista","Mueve una carta a un espacio libre.");
+            }else if(this.pistaActual==null){
+                mostrarMensaje("Pista","No hay movimientos disponibles.");
             }
         });
 
@@ -80,11 +85,17 @@ public class VistaJuego extends BorderPane{
     }
 
     private void reiniciarJuego(){
-        this.controlador=new ControladorJuego();
+        this.pistaActual=null;
         tipoSeleccionado=null;
         celdaSeleccionada=-1;
         cartaSeleccionada=-1;
-        pistaActual=null;
+
+        this.controlador=new ControladorJuego();
+
+        tableaus.getChildren().clear();
+        fundaciones.getChildren().clear();
+        celdasLibres.getChildren().clear();
+
         dibujarTablero();
     }
 
@@ -141,7 +152,6 @@ public class VistaJuego extends BorderPane{
 
             if(tope!=null){
                 ImageView img=crearFotoCarta(tope);
-                img.setStyle("-fx-effect:dropshadow(three-pass-box,rgba(0,0,0,0.6),8,0,0,0);");
                 img.setOnMouseClicked(e->procesarMovimiento("FUNDACION",indice,0,img));
                 aplicarEstiloPista(img,"FUNDACION",indice);
                 fundaciones.getChildren().add(img);
@@ -161,7 +171,6 @@ public class VistaJuego extends BorderPane{
 
             if(carta!=null){
                 ImageView img=crearFotoCarta(carta);
-                img.setStyle("-fx-effect:dropshadow(three-pass-box,rgba(0,0,0,0.4),5,0,0,0);");
                 img.setOnMouseClicked(e->procesarMovimiento("LIBRE",indice,0,img));
                 aplicarEstiloPista(img,"LIBRE",indice);
                 celdasLibres.getChildren().add(img);
@@ -176,10 +185,13 @@ public class VistaJuego extends BorderPane{
 
     private ImageView crearFotoCarta(CartaInglesa carta){
         CartaVisual cv=new CartaVisual(carta);
-        Image img=new Image(getClass().getResourceAsStream(cv.getRuta()));
-        ImageView vista=new ImageView(img);
+        ImageView vista=new ImageView(cv.getImagen());
         vista.setFitWidth(100);
         vista.setPreserveRatio(true);
+
+        //Borde negro pequeño
+        vista.setStyle("-fx-effect:dropshadow(one-pass-box,black,2,0,0,0); -fx-border-color:black; -fx-border-width:1;");
+
         return vista;
     }
 
@@ -188,18 +200,20 @@ public class VistaJuego extends BorderPane{
         r.setFill(Color.rgb(255,255,255,0.25));
         r.setArcWidth(10);
         r.setArcHeight(10);
+        r.setStroke(Color.BLACK);
+        r.setStrokeWidth(1);
         return r;
     }
 
     private void procesarMovimiento(String tipo,int num,int posCarta,Node nodo){
-        pistaActual=null;
+        this.pistaActual=null;
         if(tipoSeleccionado==null){
             tipoSeleccionado=tipo;
             celdaSeleccionada=num;
             cartaSeleccionada=posCarta;
             nodo.setStyle("-fx-effect:dropshadow(three-pass-box,#ff8c00,18,0.85,0,0);");
         }else{
-            boolean movido=controlador.moverCarta(tipoSeleccionado,celdaSeleccionada,cartaSeleccionada,tipo,num);
+            boolean movido=this.controlador.moverCarta(tipoSeleccionado,celdaSeleccionada,cartaSeleccionada,tipo,num);
             tipoSeleccionado=null;
             celdaSeleccionada=-1;
             dibujarTablero();
@@ -211,22 +225,31 @@ public class VistaJuego extends BorderPane{
     }
 
     private void aplicarEstiloPista(Node nodo,String tipo,int indice){
-        if(pistaActual!=null){
-            if(pistaActual.getTipoOrigen().equalsIgnoreCase(tipo)&&pistaActual.getIdOrigen()==indice){
-                nodo.setStyle("-fx-effect:dropshadow(three-pass-box,#ff69b4,22,0.9,0,0);");
-            }else if(pistaActual.getTipoDestino().equalsIgnoreCase(tipo)&&pistaActual.getIdDestino()==indice){
-                nodo.setStyle("-fx-effect:dropshadow(three-pass-box,#00bfff,22,0.9,0,0);");
+        String estiloLimpio="";
+
+        if(this.pistaActual!=null){
+            if(this.pistaActual.getTipoOrigen().equalsIgnoreCase(tipo) && this.pistaActual.getIdOrigen()==indice){
+                estiloLimpio="-fx-effect:dropshadow(three-pass-box,#ff69b4,22,0.9,0,0);";
+            }else if(this.pistaActual.getTipoDestino().equalsIgnoreCase(tipo) && this.pistaActual.getIdDestino()==indice){
+                estiloLimpio="-fx-effect:dropshadow(three-pass-box,#00bfff,22,0.9,0,0);";
             }
         }
+
+        //Si no hay pista, mantiene el borde negro de la carta
+        if(estiloLimpio.isEmpty() && nodo instanceof ImageView){
+            estiloLimpio="-fx-effect:dropshadow(one-pass-box,black,2,0,0,0);";
+        }
+
+        nodo.setStyle(estiloLimpio);
     }
 
     private void verificarEstadoJuego(){
-        if(controlador.estaGanado()){
+        if(this.controlador.estaGanado()){
             mostrarMensaje("¡Ganaste!","Felicidades, completaste el Eight Off.");
             return;
         }
 
-        if(controlador.obtenerPista()==null){
+        if(this.controlador.obtenerPista()==null){
             mostrarMensaje("Sin movimientos","Ya no hay más jugadas posibles.\nEl juego terminó.");
         }
     }
